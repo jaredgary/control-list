@@ -1,0 +1,115 @@
+/* Loading overlay styles */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  flex-direction: column;
+}
+
+/* Card gradient backgrounds */
+.bg-gradient-success {
+  background: linear-gradient(45deg, #28a745, #20c997);
+}
+
+.bg-gradient-info {
+  background: linear-gradient(45deg, #17a2b8, #6f42c1);
+}
+
+.bg-gradient-warning {
+  background: linear-gradient(45deg, #ffc107, #fd7e14);
+}
+
+/* Table enhancements */
+.table-hover tbody tr:hover {
+  background-color: rgba(0, 123, 255, 0.1);
+}
+
+/* Empty state styling */
+.table tbody tr td i.fa-users {
+  opacity: 0.3;
+  display: block;
+}
+
+/* Button group improvements */
+.btn-group-sm .btn {
+  padding: 0.25rem 0.5rem;
+}
+
+/* Form enhancements */
+.form-group label.font-weight-bold {
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
+.form-control:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Modal improvements */
+.modal-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.modal-footer {
+  border-top: 1px solid #dee2e6;
+}
+
+/* Search input styling */
+.input-group .form-control:focus {
+  z-index: 3;
+}
+
+/* Loading spinner in buttons */
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .display-5 {
+    font-size: 1.5rem;
+  }
+  
+  .display-6 {
+    font-size: 1.25rem;
+  }
+  
+  .btn-group-sm .btn {
+    padding: 0.125rem 0.25rem;
+    font-size: 0.75rem;
+  }
+  
+  .table-responsive {
+    font-size: 0.875rem;
+  }
+}
+
+/* Animation for card hover effects */
+.card {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Success/Error text colors */
+.text-success {
+  color: #28a745 !important;
+  font-weight: 500;
+}
+
+.text-danger {
+  color: #dc3545 !important;
+  font-weight: 500;
+}

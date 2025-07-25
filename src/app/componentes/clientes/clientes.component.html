@@ -1,10 +1,44 @@
+<!-- Loading overlay -->
+<div *ngIf="loading$ | async" class="loading-overlay">
+  <div class="text-center">
+    <div class="spinner-border text-primary" role="status">
+      <span class="sr-only">Cargando...</span>
+    </div>
+    <p class="mt-2">Cargando clientes...</p>
+  </div>
+</div>
+
+<!-- Error display -->
+<div *ngIf="error$ | async as error" class="alert alert-danger alert-dismissible fade show" role="alert">
+  <strong>Error:</strong> {{ error }}
+  <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+
 <section id="actions" class="py-4 mb-4 bg-light">
   <div class="container">
     <div class="row">
-      <div class="col-md-3">
-        <a href="#" class="btn btn-primary btn-block" data-toggle="modal" data-target="#agregarClienteModal">
+      <div class="col-md-6">
+        <button type="button" class="btn btn-primary btn-block" 
+                data-toggle="modal" data-target="#agregarClienteModal">
           <i class="fa fa-plus"></i> Agregar Cliente
-        </a>
+        </button>
+      </div>
+      <div class="col-md-6">
+        <!-- Search input with debounce -->
+        <div class="input-group">
+          <input type="text" 
+                 class="form-control" 
+                 placeholder="Buscar clientes..."
+                 (input)="onSearchChange($event.target.value)"
+                 #searchInput>
+          <div class="input-group-append">
+            <span class="input-group-text">
+              <i class="fa fa-search"></i>
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -15,48 +49,107 @@
     <div class="row">
       <div class="col-md-9">
         <div class="card">
-          <div class="card-header">
-            <h4>Listado de Clientes</h4>
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">Listado de Clientes</h4>
+            <small class="text-muted">
+              {{ (filteredClients$ | async)?.length || 0 }} cliente(s)
+            </small>
           </div>
-          <table class="table table-striped">
-            <thead class="thead-dark">
-              <tr>
-                <th>#</th>
-                <th>Nombres</th>
-                <th>Saldo</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let cliente of clients; let i = index">
-                <td>{{i+1}}</td>
-                <td>{{cliente.nombre}} {{cliente.apellido}}</td>
-                <td>{{cliente.saldo | currency: 'MNX': '$'}}</td>
-                <td>
-                  <a routerLink="/cliente/editar/{{cliente.id}}" class="btn btn-secondary">
-                    <i class="fa fa-angle-double-right"></i> Editar
-                  </a>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          
+          <!-- Optimized table with trackBy and async pipe -->
+          <div class="table-responsive">
+            <table class="table table-striped table-hover mb-0">
+              <thead class="thead-dark">
+                <tr>
+                  <th>#</th>
+                  <th>Nombres</th>
+                  <th>Email</th>
+                  <th>Saldo</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Empty state -->
+                <tr *ngIf="(filteredClients$ | async)?.length === 0">
+                  <td colspan="5" class="text-center py-4">
+                    <i class="fa fa-users fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No se encontraron clientes</p>
+                  </td>
+                </tr>
+                
+                <!-- Client rows with trackBy optimization -->
+                <tr *ngFor="let cliente of filteredClients$ | async; 
+                           let i = index; 
+                           trackBy: trackByClientId">
+                  <td>{{ i + 1 }}</td>
+                  <td>
+                    <strong>{{ cliente.nombre }} {{ cliente.apellido }}</strong>
+                  </td>
+                  <td>
+                    <small class="text-muted">{{ cliente.email || 'Sin email' }}</small>
+                  </td>
+                  <td>
+                    <span [class]="cliente.saldo >= 0 ? 'text-success' : 'text-danger'">
+                      {{ cliente.saldo | currency: 'MXN': '$' }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="btn-group btn-group-sm" role="group">
+                      <a [routerLink]="['/cliente/editar', cliente.id]" 
+                         class="btn btn-outline-primary btn-sm"
+                         title="Editar cliente">
+                        <i class="fa fa-edit"></i>
+                      </a>
+                      <button type="button" 
+                              class="btn btn-outline-danger btn-sm"
+                              title="Eliminar cliente"
+                              (click)="onDeleteClient(cliente)">
+                        <i class="fa fa-trash"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
+      
+      <!-- Statistics sidebar -->
       <div class="col-md-3">
-        <div class="card text-center bg-danger text-white mb-3">
+        <!-- Total balance card -->
+        <div class="card text-center bg-gradient-success text-white mb-3">
           <div class="card-body">
-            <h3>Saldo Total</h3>
-            <h4 class="display-4">
-              {{ getSaldoTotal() | currency: 'MNX':'$' }}
-            </h4>
+            <h5 class="card-title">
+              <i class="fa fa-dollar-sign"></i> Saldo Total
+            </h5>
+            <h3 class="display-5 mb-0">
+              {{ (saldoTotal$ | async) | currency: 'MXN':'$' }}
+            </h3>
           </div>
         </div>
-        <div class="card text-center bg-success text-white mb-3">
+        
+        <!-- Client count card -->
+        <div class="card text-center bg-gradient-info text-white mb-3">
           <div class="card-body">
-            <h3>Clientes</h3>
-            <h4 class="display-4">
-              <i class="fa fa-users"></i>  {{ clients?.length }}
-            </h4>
+            <h5 class="card-title">
+              <i class="fa fa-users"></i> Total Clientes
+            </h5>
+            <h3 class="display-5 mb-0">
+              {{ (clients$ | async)?.length || 0 }}
+            </h3>
+          </div>
+        </div>
+        
+        <!-- Average balance card -->
+        <div class="card text-center bg-gradient-warning text-white">
+          <div class="card-body">
+            <h5 class="card-title">
+              <i class="fa fa-chart-line"></i> Saldo Promedio
+            </h5>
+            <h3 class="display-6 mb-0">
+              {{ getAverageBalance() | async | currency: 'MXN':'$' }}
+            </h3>
           </div>
         </div>
       </div>
@@ -64,73 +157,131 @@
   </div>
 </section>
 
-<div class="modal fade" id="agregarClienteModal">
-  <div class="modal-dialog modal-lg">
+<!-- Optimized modal with reactive forms -->
+<div class="modal fade" id="agregarClienteModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
-      <div class="modal-header bg-info text-white">
-        <h5 class="modal-title">Agregar Cliente</h5>
-        <button class="close" data-dismiss="modal" #botonCerrar>
-          <span>&times;</span>
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          <i class="fa fa-user-plus"></i> Agregar Cliente
+        </h5>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
         </button>
       </div>
 
+      <!-- Flash messages inside modal -->
       <flash-messages></flash-messages>
 
-      <form #clienteForm="ngForm" (ngSubmit)="agregar(clienteForm)">
+      <form #clienteFormRef="ngForm" (ngSubmit)="onSubmitClient(clienteFormRef)" novalidate>
         <div class="modal-body">
-          <div class="form-group">
-            <label for="nombre">Nombre</label>
-            <input type="text" name="nombre" id="nombre" class="form-control"
-                   #nombre="ngModel" [(ngModel)]="client.nombre"
-                   [ngClass]="{'is-invalid': nombre.errors && nombre.touched}"
-                   required minlength="2">
-            <div class="invalid-feedback" [hidden]="!nombre.errors?.required">
-              Nombre requerido
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="nombre" class="font-weight-bold">
+                  Nombre <span class="text-danger">*</span>
+                </label>
+                <input type="text" 
+                       name="nombre" 
+                       id="nombre" 
+                       class="form-control"
+                       #nombre="ngModel" 
+                       [(ngModel)]="clienteFormData.nombre"
+                       [class.is-invalid]="nombre.invalid && nombre.touched"
+                       required 
+                       minlength="2"
+                       maxlength="50"
+                       placeholder="Ingrese el nombre">
+                <div class="invalid-feedback">
+                  <small *ngIf="nombre.errors?.required">El nombre es requerido</small>
+                  <small *ngIf="nombre.errors?.minlength">Mínimo 2 caracteres</small>
+                  <small *ngIf="nombre.errors?.maxlength">Máximo 50 caracteres</small>
+                </div>
+              </div>
             </div>
-            <div class="invalid-feedback" [hidden]="!nombre.errors?.minlength">
-              Debe contener al menos 2 caracteres
+            
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="apellido" class="font-weight-bold">
+                  Apellido <span class="text-danger">*</span>
+                </label>
+                <input type="text" 
+                       name="apellido" 
+                       id="apellido" 
+                       class="form-control"
+                       #apellido="ngModel" 
+                                               [(ngModel)]="clienteFormData.apellido"
+                       [class.is-invalid]="apellido.invalid && apellido.touched"
+                       required 
+                       minlength="2"
+                       maxlength="50"
+                       placeholder="Ingrese el apellido">
+                <div class="invalid-feedback">
+                  <small *ngIf="apellido.errors?.required">El apellido es requerido</small>
+                  <small *ngIf="apellido.errors?.minlength">Mínimo 2 caracteres</small>
+                  <small *ngIf="apellido.errors?.maxlength">Máximo 50 caracteres</small>
+                </div>
+              </div>
             </div>
           </div>
+          
           <div class="form-group">
-            <label for="apellido">Apellido</label>
-            <input type="text" name="apellido" id="apellido" class="form-control"
-                   #apellido="ngModel" [(ngModel)]="client.apellido"
-                   [ngClass]="{'is-invalid': apellido.errors && apellido.touched}"
-                   required minlength="2">
-            <div class="invalid-feedback" [hidden]="!apellido.errors?.required">
-              Apellido requerido
-            </div>
-            <div class="invalid-feedback" [hidden]="!apellido.errors?.minlength">
-              Debe contener al menos 2 caracteres
+            <label for="email" class="font-weight-bold">Email</label>
+            <input type="email" 
+                   name="email" 
+                   id="email" 
+                   class="form-control"
+                   #email="ngModel" 
+                   [(ngModel)]="clienteFormData.email"
+                   [class.is-invalid]="email.invalid && email.touched"
+                   email
+                   placeholder="correo@ejemplo.com">
+            <div class="invalid-feedback">
+              <small *ngIf="email.errors?.email">Formato de email inválido</small>
             </div>
           </div>
+          
           <div class="form-group">
-            <label for="email">Email</label>
-            <input type="email" name="email" id="email" class="form-control"
-                   #email="ngModel" [(ngModel)]="client.email"
-                   [ngClass]="{'is-invalid': email.errors && email.touched}"
-                   pattern="^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$"
-                   required minlength="2">
-            <div class="invalid-feedback" [hidden]="!email.errors?.required">
-              Email requerido
+            <label for="saldo" class="font-weight-bold">
+              Saldo Inicial <span class="text-danger">*</span>
+            </label>
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text">$</span>
+              </div>
+              <input type="number" 
+                     name="saldo" 
+                     id="saldo" 
+                     class="form-control"
+                     #saldo="ngModel" 
+                                           [(ngModel)]="clienteFormData.saldo"
+                     [class.is-invalid]="saldo.invalid && saldo.touched"
+                     required
+                     min="0"
+                     step="0.01"
+                     placeholder="0.00">
+              <div class="invalid-feedback">
+                <small *ngIf="saldo.errors?.required">El saldo es requerido</small>
+                <small *ngIf="saldo.errors?.min">El saldo no puede ser negativo</small>
+              </div>
             </div>
-            <div class="invalid-feedback" [hidden]="!email.errors?.pattern">
-              Email no es válido
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="saldo">Saldo</label>
-            <input type="number" name="saldo" id="saldo" class="form-control"
-                   #saldo="ngModel" [(ngModel)]="client.saldo"
-                   [ngClass]="{'is-invalid': saldo.errors && saldo.touched}"
-                   required>
-            <div class="invalid-feedback" [hidden]="!saldo.errors?.required">
-              Saldo requerido
-            </div>
+            <small class="form-text text-muted">
+              Ingrese el saldo inicial del cliente
+            </small>
           </div>
         </div>
+        
         <div class="modal-footer">
-          <button type="submit" class="btn btn-primary">Guardar</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">
+            <i class="fa fa-times"></i> Cancelar
+          </button>
+          <button type="submit" 
+                  class="btn btn-primary"
+                  [disabled]="clienteFormRef.invalid || isSubmitting">
+            <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm mr-2"></span>
+            <i class="fa fa-save" *ngIf="!isSubmitting"></i>
+            {{ isSubmitting ? 'Guardando...' : 'Guardar Cliente' }}
+          </button>
         </div>
       </form>
     </div>

@@ -7,7 +7,12 @@
     "build": "ng build",
     "test": "ng test",
     "lint": "ng lint",
-    "e2e": "ng e2e"
+    "e2e": "ng e2e",
+    "test:performance": "node scripts/run-performance-tests.js",
+    "test:coverage": "ng test --code-coverage --browsers=ChromeHeadless --watch=false",
+    "test:watch": "ng test --watch=true",
+    "analyze:bundle": "ng build --prod --stats-json && npx webpack-bundle-analyzer dist/client-list/stats.json",
+    "benchmark": "ng test --include='**/*.benchmark.spec.ts' --browsers=ChromeHeadless --watch=false"
   },
   "private": true,
   "dependencies": {

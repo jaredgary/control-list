@@ -23,6 +23,7 @@ import {LoginService} from './servicios/login.service';
 import {AuthGuard} from './guardianes/auth.guard';
 import {ConfiguracionService} from './servicios/configuracion.service';
 import {ConfiguracionGuard} from './guardianes/configuracion.guard';
+import {SharedModule} from './shared/shared.module';
 
 @NgModule({
   declarations: [
@@ -44,7 +45,8 @@ import {ConfiguracionGuard} from './guardianes/configuracion.guard';
     AngularFirestoreModule,
     AngularFireAuthModule,
     FormsModule,
-    FlashMessagesModule.forRoot()
+    FlashMessagesModule.forRoot(),
+    SharedModule
   ],
   providers: [ClienteService,
     LoginService,
